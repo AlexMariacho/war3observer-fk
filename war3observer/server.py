@@ -2,6 +2,8 @@ import asyncio
 import websockets
 import json
 import logging
+import os
+import time
 
 from . import __version__
 from .game import Game
@@ -26,6 +28,13 @@ class Server():
 
     self.game = Game()
     self._api_error = None
+    self._state = None
+    self._state_time = 0
+
+    # Settings changed live (e.g. from the control panel) on top of each
+    # view's own defaults. Every client gets the full set, so a client that
+    # (re)connects later, or a key that is reset, ends up the same everywhere.
+    self._client_settings = dict(self.config['clientSettings'] or {})
 
   def serve(self):
     logging.info('observer %s' % __version__)
@@ -48,6 +57,57 @@ class Server():
   def settings_event(self, settings):
     return json.dumps({ 'type': 'settings', 'content': settings })
 
+  def get_state(self):
+    # Every client polls, share one update between them
+    if self._state is not None and time.monotonic() - self._state_time < 1:
+      return self._state
+
+    try:
+      state = self.game.update()
+      self.log_api_availability(state)
+    except Exception:
+      logging.exception('An error occurred while updating the game state')
+      state = None
+
+    self._state = state
+    self._state_time = time.monotonic()
+    return state
+
+  def update_client_settings(self, changes, reset=False):
+    if reset:
+      self._client_settings = {}
+
+    for key, value in (changes or {}).items():
+      # null resets a setting to the view's own default
+      if value is None:
+        self._client_settings.pop(key, None)
+      else:
+        self._client_settings[key] = value
+
+    self.save_client_settings()
+    websockets.broadcast(list(self._clients), self.settings_event(self._client_settings))
+
+  def save_client_settings(self):
+    """Keep live changes across restarts by writing them to the config file"""
+
+    path = self.config.get('config')
+    if not path:
+      return
+
+    try:
+      config = {}
+      if os.path.isfile(path):
+        with open(path, 'r', encoding='utf-8') as fh:
+          config = json.load(fh)
+
+      config['clientSettings'] = self._client_settings
+
+      with open(path + '.tmp', 'w', encoding='utf-8') as fh:
+        json.dump(config, fh, indent=2, ensure_ascii=False)
+      os.replace(path + '.tmp', path)
+    except (OSError, ValueError):
+      logging.exception('observer - Could not save the client settings to %s' % path)
+
   def log_api_availability(self, state):
     # Only log when the availability (or the reason for it) changes
     game = state.get('game') if isinstance(state, dict) else None
@@ -67,14 +127,7 @@ class Server():
   async def send_state_to_client(self, websocket):
     try:
       while True:
-        try:
-          state = self.game.update()
-          self.log_api_availability(state)
-        except Exception:
-          logging.exception('An error occurred while updating the game state')
-          state = None
-
-        await websocket.send(self.state_event(state))
+        await websocket.send(self.state_event(self.get_state()))
         await asyncio.sleep(2)
     except websockets.exceptions.ConnectionClosed:
       pass
@@ -89,10 +142,12 @@ class Server():
           logging.debug('observer - Ignoring malformed message %r' % (message,))
           continue
 
-        if action == 'setClientSettings':
-          websockets.broadcast(
-            list(self._clients),
-            self.settings_event(data.get('content')))
+        content = data.get('content')
+
+        if action == 'setClientSettings' and isinstance(content, dict):
+          self.update_client_settings(content)
+        elif action == 'resetClientSettings':
+          self.update_client_settings(None, reset=True)
     except websockets.exceptions.ConnectionClosed:
       pass
 
@@ -104,7 +159,7 @@ class Server():
 
     try:
       # Begin by sending the client settings once
-      await websocket.send(self.settings_event(self.config['clientSettings']))
+      await websocket.send(self.settings_event(self._client_settings))
 
       # Send an updated state periodically and check for messages
       tasks = [
@@ -133,3 +188,4 @@ class Server():
         logging.debug('observer - Was last client, closing game')
 
         self.game.close()
+        self._state = None

@@ -14,3 +14,7 @@ tasks/
 
 # Python virtual environment (run.bat)
 .venv/
+
+# Local server config, also written by the control panel
+war3observer.config.json
+war3observer.config.json.tmp

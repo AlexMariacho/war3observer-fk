@@ -84,11 +84,26 @@ html {
 
 body {
   margin: 0;
+  overflow: hidden;
   font-family: $font-family-base;
   font-size: $font-size-base;
   line-height: $line-height-base;
   color: $body-color;
   background-color: $body-bg;
+}
+
+// Fixed size stage, scaled to the window by App.fitToWindow()
+#app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 0 0;
+
+  .App--4x3 & {
+    width: 1440px;
+  }
 }
 
 @each $name, $color in map-merge($themeColors, $teamColors) {

@@ -82,7 +82,8 @@ class SharedMemoryView():
     self._handle = k32.OpenFileMappingW(FILE_MAP_READ | FILE_MAP_WRITE, False, name)
     if not self._handle:
       raise SharedMemoryError(
-        "Observer API shared memory '%s' not found (is Warcraft III running? error %d)"
+        "Observer API shared memory '%s' not found: Warcraft III only creates it "
+        "while a replay is playing or a game is being observed (error %d)"
         % (name, ctypes.get_last_error()))
 
     self._view = k32.MapViewOfFile(self._handle, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0)
@@ -136,6 +137,7 @@ class Game():
     self._shm = None
     self._slots = []  # byte offsets of the occupied player slots
     self._last_error = None
+    self._was_available = False
 
     self.state = dict(game=dict(is_in_game=False), players=[])
 
@@ -166,7 +168,9 @@ class Game():
         "Observer API shared memory is smaller than expected (%d < %d bytes), "
         "the layout may have changed (version %d)" % (shm.size, required, version))
 
-    logging.info("Attached to the observer API (version %d, %d bytes)", version, shm.size)
+    if not self._was_available:
+      logging.info("Attached to the observer API (version %d, %d bytes)", version, shm.size)
+    self._was_available = True
 
     # The game only starts updating the file once the refresh rate is set.
     refresh_rate = struct.unpack("<I", shm.read(REFRESH_RATE_OFFSET, 4))[0]
@@ -242,7 +246,10 @@ class Game():
     self.state = dict(game=dict(is_in_game=False), players=[])
     self._slots = []
     self._last_error = None
+    self._was_available = False
+    self._detach()
 
+  def _detach(self):
     if self._shm is not None:
       self._shm.close()
       self._shm = None
@@ -250,12 +257,21 @@ class Game():
   def update(self):
     """Update the game state"""
 
-    if self._shm is None:
-      error = self._attach()
-      if error is not None:
-        return self._unavailable(error)
-      self._last_error = None
+    # The mapping is opened for each update and closed right after. Holding
+    # it open would keep it alive after the game drops it (closing the game
+    # or leaving a replay), and we would keep serving that stale state.
+    error = self._attach()
+    if error is not None:
+      self._was_available = False
+      return self._unavailable(error)
+    self._last_error = None
 
+    try:
+      return self._read_state()
+    finally:
+      self._detach()
+
+  def _read_state(self):
     game_state = self._get_game_state()
 
     if not game_state['is_in_game']:

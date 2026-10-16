@@ -78,7 +78,8 @@ $resources-overview-resource-spacing-x:  23px !default;
              3px);
     }
 
-    @media (aspect-ratio: 4/3) {
+    // Set by App.fitToWindow() for 4:3 sources (1440x1080)
+    .App--4x3 & {
       &:first-child {
         left: $resources-overview-player-offset-x;
       }

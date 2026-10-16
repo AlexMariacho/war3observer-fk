@@ -10,19 +10,23 @@ export default class Player extends Component {
 
     return (
       <div class={`Player Player--${getPlayerColor(player)}`}>
-        <div class="Player-resources">
-          <ResourcePanel player={player} icons={resourceIcons} />
-        </div>
+        {app.settings.showResources ? (
+          <div class="Player-resources">
+            <ResourcePanel player={player} icons={resourceIcons} />
+          </div>
+        ) : null}
 
-        <div class="Player-heroes">
-          {player.heroes.slice().reverse().map(hero => (
-            <Hero
-              hero={hero}
-              showStatus={false}
-              showAbilities={app.settings.showHeroAbilities}
-              showItems={app.settings.showHeroItems} />
-          ))}
-        </div>
+        {app.settings.showHeroes ? (
+          <div class="Player-heroes">
+            {player.heroes.slice().reverse().map(hero => (
+              <Hero
+                hero={hero}
+                showStatus={false}
+                showAbilities={app.settings.showHeroAbilities}
+                showItems={app.settings.showHeroItems} />
+            ))}
+          </div>
+        ) : null}
       </div>
     );
   }

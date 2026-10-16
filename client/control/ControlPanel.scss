@@ -1,0 +1,135 @@
+$panel-bg:        #1b1b1f;
+$panel-surface:   #26262c;
+$panel-border:    #3a3a42;
+$panel-text:      #e8e8ec;
+$panel-muted:     #9a9aa6;
+$panel-accent:    #d9a43a;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: $panel-bg;
+  color: $panel-text;
+  font: 14px/1.4 'Segoe UI', system-ui, sans-serif;
+}
+
+.ControlPanel {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px 16px 24px;
+
+  h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: $panel-muted;
+  }
+}
+
+.ControlPanel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ControlPanel-status {
+  padding: 8px 10px;
+  margin-bottom: 14px;
+  border: 1px solid $panel-border;
+  border-radius: 6px;
+  background: $panel-surface;
+  overflow-wrap: anywhere;
+}
+
+.ControlPanel-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 8px;
+  border-radius: 50%;
+  vertical-align: middle;
+
+  &--on   { background: #3fbf5f; }
+  &--wait { background: $panel-accent; }
+  &--off  { background: #d9534f; }
+}
+
+.ControlPanel-group {
+  margin-bottom: 16px;
+}
+
+.ControlPanel-setting {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 6px 0;
+  border-top: 1px solid $panel-border;
+}
+
+.ControlPanel-label {
+  flex: 0 0 150px;
+  color: $panel-muted;
+}
+
+.ControlPanel-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ControlPanel-option,
+.ControlPanel-reset {
+  padding: 4px 10px;
+  border: 1px solid $panel-border;
+  border-radius: 4px;
+  background: $panel-surface;
+  color: $panel-text;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: $panel-muted;
+  }
+
+  &:disabled {
+    opacity: .4;
+    cursor: default;
+  }
+}
+
+.ControlPanel-option {
+  &.is-active {
+    border-color: $panel-accent;
+    background: $panel-accent;
+    color: #1b1b1f;
+    font-weight: 600;
+  }
+
+  &--default.is-active {
+    border-color: $panel-muted;
+    background: $panel-border;
+    color: $panel-text;
+  }
+}
+
+.ControlPanel-hint {
+  margin: 0;
+  color: $panel-muted;
+  font-size: 12px;
+}

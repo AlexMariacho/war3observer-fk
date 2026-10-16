@@ -13,8 +13,8 @@ export default class CamoVersusApp extends App {
 
   view() {
     return [
-      <CamoResourcesOverview />,
-      <CamoHeroesOverview />
+      this.settings.showResources ? <CamoResourcesOverview /> : null,
+      this.settings.showHeroes ? <CamoHeroesOverview /> : null
     ];
   }
 }

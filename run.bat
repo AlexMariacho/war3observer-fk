@@ -7,8 +7,8 @@ rem
 rem Usage: run.bat [fake] [rebuild] [noopen] [view NAME]
 rem   fake       also start tools\fake_observer_api.py (no Warcraft III needed)
 rem   rebuild    reinstall dependencies and re-extract icons
-rem   noopen     don't open the overlay page in the browser
-rem   view NAME  overlay page to open (default: de-1v1-overview)
+rem   noopen     don't open the control panel in the browser
+rem   view NAME  overlay page to suggest for OBS (default: de-1v1-overview)
 rem
 rem Set WC3_DIR to override the Warcraft III installation directory.
 
@@ -33,6 +33,8 @@ exit /b 1
 :parsed
 
 set "PY=%CD%\.venv\Scripts\python.exe"
+set "WC3_RUNNING="
+tasklist /fi "imagename eq Warcraft III.exe" 2>nul | "%SystemRoot%\System32\find.exe" /i "Warcraft III.exe" >nul && set "WC3_RUNNING=1"
 
 rem ---------------------------------------------------------------------------
 call :step 1 "Checking tools"
@@ -124,17 +126,29 @@ call :ok "Icons are up to date for build %GAMEVER%"
 goto icons_done
 
 :icons_extract
+rem A running game locks its files, so extraction would fail
+if defined WC3_RUNNING goto icons_locked
 if defined OLDVER echo       Icons were extracted from build %OLDVER%, re-extracting...
-"%PY%" tools\extract_icons.py "%WC3_DIR%" client\dist\icons || (call :fail "Icon extraction failed, see the output above" & exit /b 1)
+"%PY%" tools\extract_icons.py "%WC3_DIR%" client\dist\icons && goto icons_written
+call :warn "Icon extraction failed, see the output above. The overlay still works, missing icons show a placeholder"
+goto icons_done
+
+:icons_written
 > "%STAMP%" echo %GAMEVER%
 call :ok "Icons extracted to client\dist\icons (sd, hd, de)"
+goto icons_done
+
+:icons_locked
+if defined OLDVER (
+  call :warn "Warcraft III is running and locks its files. Keeping icons from build %OLDVER%, close the game and rerun to update them"
+) else (
+  call :warn "Warcraft III is running and locks its files. Close the game and rerun once to extract icons, until then icons show a placeholder"
+)
 
 :icons_done
 
 rem ---------------------------------------------------------------------------
 call :step 5 "Observer API source"
-
-tasklist /fi "imagename eq Warcraft III.exe" 2>nul | "%SystemRoot%\System32\find.exe" /i "Warcraft III.exe" >nul && set "WC3_RUNNING=1"
 
 if not defined FAKE goto no_fake
 echo       Starting tools\fake_observer_api.py in a separate window...
@@ -155,12 +169,26 @@ if defined WC3_RUNNING (
 rem ---------------------------------------------------------------------------
 call :step 6 "Starting the server"
 
+rem A server left over from a previous run would keep the port and run old code
+set "OLDPID="
+set "OLDNAME="
+for /f "tokens=5" %%p in ('netstat -ano ^| "%SystemRoot%\System32\findstr.exe" /r /c:":8124 .*LISTENING"') do set "OLDPID=%%p"
+if not defined OLDPID goto server_open
+for /f "tokens=1" %%n in ('tasklist /fi "pid eq %OLDPID%" /nh') do set "OLDNAME=%%n"
+if /i not "%OLDNAME%"=="python.exe" (call :fail "Port 8124 is used by another program: %OLDNAME% PID %OLDPID%" & exit /b 1)
+echo       Stopping the previous war3observer server, PID %OLDPID%...
+taskkill /pid %OLDPID% /f >nul 2>&1
+ping -n 2 127.0.0.1 >nul
+
+:server_open
 if defined NOOPEN goto server_start
-echo       Opening client\dist\%VIEW%.html in the browser...
-start "" "%CD%\client\dist\%VIEW%.html"
+echo       Opening the control panel in the browser...
+start "" "%CD%\client\dist\control-panel.html"
 
 :server_start
-echo       For OBS: Browser Source, Local file = %CD%\client\dist\%VIEW%.html, 1920x1080
+echo       Overlay for OBS:  Browser Source, Local file = %CD%\client\dist\%VIEW%.html, 1920x1080
+echo       Control panel:    file:///%CD:\=/%/client/dist/control-panel.html
+echo                         (OBS: View, Docks, Custom Browser Docks, to keep it inside OBS)
 echo       Server log follows. Press Ctrl+C to stop.
 echo.
 "%PY%" -m war3observer

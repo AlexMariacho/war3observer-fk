@@ -8,3 +8,6 @@ war3observer-*.zip
 
 .vscode/
 *.sublime-*
+
+# Local task planning
+tasks/

@@ -17,7 +17,7 @@ cp -R client/dist/. dist/client/
 
 # Build icons
 echo 'Extracting icons from WC3 installation...'
-mkdir -p dist/client/icons/hd
+mkdir -p dist/client/icons
 python.exe tools/extract_icons.py "$1" dist/client/icons/
 
 # Archive

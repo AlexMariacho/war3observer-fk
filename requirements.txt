@@ -1,2 +1,4 @@
-websockets
-git+https://github.com/sides/war3structs.git
+websockets>=13,<18
+construct==2.10.70
+lark-parser==0.12.0
+war3structs @ git+https://github.com/sides/war3structs.git@171c91240346e610e22cf10bab0c6d526996f855

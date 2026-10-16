@@ -58,6 +58,7 @@ Some of the client settings you can put in `clientSettings`:
 
 | Setting | Default | Description |
 | --- | --- | --- |
+| `hudType` | `"human"` (`"auto"` in the `*-replay-*` views) | Style of the top resource panel: `"human"`, `"orc"`, `"nightelf"`, `"undead"`, `"forsaken"` (the Forsaken Kingdom HUD) or `"auto"` (follows the first player's race). There is no Forsaken race, so `"forsaken"` has to be set explicitly |
 | `iconRoot` | depends on the view | Folder (relative to the view) to load icons from, e.g. `"icons/de/"` |
 | `iconFallbackRoots` | `["icons/"]` | Folders to try, in order, when an icon is not found in `iconRoot`. The classic set has the widest coverage |
 | `heroAbilityFilter` | `"id"` | How to pick which of a hero's abilities are shown: `"id"` filters by ability id (hero abilities start with `AH`, `AO`, `AE`, `AU` or `AN`), `"flag"` uses the observer API's `is_hero_ability` flag, `"auto"` uses the flag if the hero has any flagged ability and the id otherwise |

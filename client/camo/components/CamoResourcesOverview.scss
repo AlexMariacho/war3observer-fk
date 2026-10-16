@@ -27,6 +27,10 @@ $resources-overview-resource-spacing-x:  23px !default;
     background-image: url('./assets/ui/undead-resource-panel.png');
   }
 
+  &.ResourcesOverview--forsaken {
+    background-image: url('./assets/ui/forsaken-resource-panel.png');
+  }
+
   .ResourcePanel {
     position: absolute;
     top: $resources-overview-spacing-y;

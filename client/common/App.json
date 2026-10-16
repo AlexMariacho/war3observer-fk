@@ -8,5 +8,7 @@
   "showHeroAbilities": true,
   "showHeroItems": true,
   "showHeroRevivalProgress": false,
-  "iconRoot": "icons/"
+  "heroAbilityFilter": "id",
+  "iconRoot": "icons/",
+  "iconFallbackRoots": ["icons/"]
 }

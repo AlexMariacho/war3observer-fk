@@ -18,7 +18,8 @@ export default class App extends Component {
   }
 
   defaultSettings() {
-    return defaultSettings;
+    // Subclasses extend this, so don't hand out the shared object
+    return Object.assign({}, defaultSettings);
   }
 
   boot() {

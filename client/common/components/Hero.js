@@ -11,6 +11,20 @@ export default class Hero extends Component {
       && ability.id.match(/^A[HOEUN]/);
   }
 
+  // `heroAbilityFilter`: 'id' filters by ability id (above), 'flag' uses the
+  // API's `is_hero_ability`, 'auto' uses the flag when this hero has any
+  // flagged ability. Defaults to 'id' until the flag has been verified at
+  // runtime on patch 3.0 (Forsaken Kingdom).
+  getHeroAbilities(hero) {
+    const mode = app.settings.heroAbilityFilter;
+    const useFlag = mode === 'flag'
+      || (mode === 'auto' && hero.abilities.some(ability => ability.is_hero_ability === true));
+
+    return hero.abilities.filter(useFlag
+      ? ability => ability.is_hero_ability === true
+      : this.filterHeroAbilities);
+  }
+
   getXpFraction(percent) {
     if (app.settings.heroLevelPrecision <= 0) {
       return 0;
@@ -24,9 +38,7 @@ export default class Hero extends Component {
 
     // Abilities come in reverse order that they were trained, so
     // reverse them after filtering.
-    const abilities = hero.abilities
-      .filter(this.filterHeroAbilities)
-      .reverse();
+    const abilities = this.getHeroAbilities(hero).reverse();
 
     const items = hero.inventory;
 

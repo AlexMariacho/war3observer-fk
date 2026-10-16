@@ -18,6 +18,14 @@ It runs a local websocket server which sends a message with the entire state per
   - To avoid them running in the background regardless of whether you're using them or not, keep the sources in a separate scene collection OR enable `Shutdown source when not visible` on them
 - Now you can run `war3observer.exe` whenever you want the overlay to start updating
 
+The included views come in three flavours, depending on which icon set they use:
+
+- `sd-*`: classic Warcraft III icons (`icons/`)
+- `hd-*`: Warcraft III: Reforged icons (`icons/hd/`)
+- `de-*`: Definitive Edition icons (`icons/de/`), the new art that comes with the Forsaken Kingdom update (patch 3.0)
+
+Pick the one that matches what the game you are observing is showing. Icons that are missing from the chosen set fall back to the other sets in `iconFallbackRoots` (see below) and finally to a neutral placeholder (`Icon--missing` CSS class), instead of a broken image.
+
 You generally shouldn't, but if you experience the overlay not updating properly, you can try any of these:
 
 - Close both Warcraft III and `war3observer.exe` and then restart them in that order
@@ -46,6 +54,14 @@ For advanced options you can create a file called `war3observer.config.json` in 
 
 `war3observer.exe` also comes with some command-line options, run it with `--help` for details.
 
+Some of the client settings you can put in `clientSettings`:
+
+| Setting | Default | Description |
+| --- | --- | --- |
+| `iconRoot` | depends on the view | Folder (relative to the view) to load icons from, e.g. `"icons/de/"` |
+| `iconFallbackRoots` | `["icons/"]` | Folders to try, in order, when an icon is not found in `iconRoot`. The classic set has the widest coverage |
+| `heroAbilityFilter` | `"id"` | How to pick which of a hero's abilities are shown: `"id"` filters by ability id (hero abilities start with `AH`, `AO`, `AE`, `AU` or `AN`), `"flag"` uses the observer API's `is_hero_ability` flag, `"auto"` uses the flag if the hero has any flagged ability and the id otherwise |
+
 
 #### Controlling the overlay
 
@@ -63,7 +79,8 @@ It's possible to control the overlay beyond OBS scenes with an external program.
 - `npm install`
 - `npm run start` to watch for changes and build the client (rerun this whenever a new view is added)
 - `mkdir dist\icons`
-- `python ..\tools\extract_icons.py <wc3 installation dir> .\dist\icons` if you want to include icons
+- `python ..\tools\extract_icons.py <wc3 installation dir> .\dist\icons` if you want to include icons (the classic icons go in `dist\icons`, the `hd` and `de` sets in the `hd` and `de` subfolders it creates itself)
+- `python ..\tools\fake_observer_api.py` fakes the game's observer API so you can develop without running Warcraft III (Windows only, start it before `python -m war3observer`)
 
 
 ### Making custom views

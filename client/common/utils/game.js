@@ -1,5 +1,5 @@
 export function isInGame() {
-  return app.game && app.game.game.is_in_game;
+  return !!(app.game && app.game.game && app.game.game.is_in_game);
 }
 
 export function getPlayers() {
@@ -21,7 +21,10 @@ function splitTeams(teams, player) {
 
 export function getHudType() {
   if (app.settings.hudType === 'auto') {
-    return app.game.players[0].race.toLowerCase();
+    const player = app.game && app.game.players && app.game.players[0];
+
+    // Nothing to detect the race from yet, fall back to the default HUD
+    return player && player.race ? player.race.toLowerCase() : 'human';
   }
 
   return app.settings.hudType;

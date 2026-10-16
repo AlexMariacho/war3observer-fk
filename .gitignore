@@ -11,3 +11,6 @@ war3observer-*.zip
 
 # Local task planning
 tasks/
+
+# Python virtual environment (run.bat)
+.venv/

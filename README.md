@@ -71,6 +71,10 @@ It's possible to control the overlay beyond OBS scenes with an external program.
 
 ## Development
 
+On Windows, `run.bat` does all of the steps below in one go and reports each one: it checks the tools, creates `.venv` and installs the Python dependencies, builds the client, extracts icons (again only when the game build changes), and starts the server, opening an overlay page in the browser. Set `WC3_DIR` if Warcraft III is not installed in the default location of the script. Options: `fake` (also start `tools\fake_observer_api.py`), `rebuild` (reinstall dependencies and re-extract icons), `noopen`, `view <name>` (default `de-1v1-overview`).
+
+To do it by hand:
+
 - Have [Python 3](https://www.python.org/), [node](https://nodejs.org/en/), and Warcraft III installed
 - `git clone https://github.com/sides/war3observer.git`
 - `cd war3observer`

@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
@@ -26,7 +25,7 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             plugins: [
-              ['@babel/plugin-transform-react-jsx', { pragma: 'm' }]
+              ['@babel/plugin-transform-react-jsx', { runtime: 'classic', pragma: 'm' }]
             ]
           }
         }
@@ -36,16 +35,21 @@ module.exports = {
         use: [
           { loader: MiniCssExtractPlugin.loader },
           'css-loader',
-          'sass-loader'
+          {
+            loader: 'sass-loader',
+            options: {
+              sassOptions: {
+                silenceDeprecations: ['import', 'global-builtin', 'color-functions', 'slash-div']
+              }
+            }
+          }
         ]
       },
       {
         test:  /\.(png|jpg|gif|svg|woff2)$/,
-        use: {
-          loader: 'file-loader',
-          options: {
-            name: 'assets/[hash].[ext]'
-          }
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/[hash][ext]'
         }
       }
     ]
@@ -55,7 +59,7 @@ module.exports = {
     filename: '[name].js',
     path: path.resolve(process.cwd(), 'dist'),
     publicPath: '',
-    libraryTarget: 'window'
+    library: { type: 'window' }
   },
 
   plugins: [
@@ -71,7 +75,20 @@ module.exports = {
         filename: view + '.html',
         template: templatePath,
         excludeChunks: views.filter(excludedView => excludedView !== view),
-        inject: false
+        inject: false,
+        // The shared template iterates htmlWebpackPlugin.files.{css,chunks}, which html-webpack-plugin 4+ no longer provides
+        templateParameters: (compilation, assets, assetTags, options) => ({
+          compilation,
+          webpackConfig: compilation.options,
+          htmlWebpackPlugin: {
+            tags: assetTags,
+            files: {
+              css: assets.css,
+              chunks: assets.js.map(entry => ({ entry }))
+            },
+            options
+          }
+        })
       })
     })
   ]
